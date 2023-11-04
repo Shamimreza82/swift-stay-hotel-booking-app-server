@@ -1,5 +1,5 @@
 const express = require('express')
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express()
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser')
@@ -58,6 +58,14 @@ async function run() {
     // await client.connect();
     // Send a ping to confirm a successful connection
 
+    // collection data 
+
+    const roomsCollections = client.db("roomsDB").collection("rooms")
+    const bookingCollections = client.db("roomsDB").collection("booking")
+
+
+
+
     // jwt 
     app.post('/api/v1/auth/access-token', async (req, res) => {
         const user = req.body; 
@@ -71,6 +79,28 @@ async function run() {
         .send({success: true})
     })
 
+    /// rooms related route
+    app.get('/api/v1/rooms', async(req, res) => {
+        const result = await roomsCollections.find().toArray()
+        res.send(result)
+    })
+
+    app.get('/api/v1/room/:id', async(req, res) => {
+        const id = req.params.id
+        console.log(id);
+        const query = {_id: new ObjectId(id)}
+        const result = await roomsCollections.findOne(query)
+        res.send(result)
+    })
+
+    app.post('/api/v1/booking',verifyToken, async (req, res) => {
+        const booking = req.body
+        console.log(booking);
+        const result = await bookingCollections.insertOne(booking)
+        res.send(result)
+        
+
+    })
 
 
 
