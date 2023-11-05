@@ -26,7 +26,7 @@ const verifyToken = async (req, res, next) => {
       console.log(err);
       return res.status(401).send({massage: "not authorize"})
     }
-    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+    jwt.verify(token, process.env.ACCESS_TOKEN, (err, decoded) => {
       if(err){
         return res.status(401).send({massage: 'unauthorize'})
       }
@@ -79,6 +79,13 @@ async function run() {
         .send({success: true})
     })
 
+
+    app.post('/api/v1/logout', async(req, res) => {
+        const user = req.body 
+        res.clearCookie('token', {maxAge: 0})
+    })
+
+
     /// rooms related route
     app.get('/api/v1/rooms', async(req, res) => {
         const result = await roomsCollections.find().toArray()
@@ -93,13 +100,25 @@ async function run() {
         res.send(result)
     })
 
-    app.post('/api/v1/booking',verifyToken, async (req, res) => {
+    app.post('/api/v1/booking',async (req, res) => {
         const booking = req.body
         console.log(booking);
         const result = await bookingCollections.insertOne(booking)
         res.send(result)
-        
+    })
 
+    app.get('/api/v1/bookings', verifyToken,  async (req, res) => {
+        console.log("ssssssssssss",req.query.email);
+        console.log(" veryfy Token", req.user.email);
+        if(req.query?.email !== req.user?.email){
+            return res.status(401).send({message: "unauthorize"})
+          }
+              let query = {}
+            if(req.query?.email){
+                query = {email: req.query.email}
+            }
+            const result = await bookingCollections.find(query).toArray()
+            res.send(result)
     })
 
 
