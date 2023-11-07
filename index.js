@@ -154,7 +154,7 @@ async function run() {
 
     app.put('/booking/:id', async(req, res) => {
         try {
-          const date = req.body;
+          const date = req.body.date;
         const id = req.params.id
         console.log(id, date);
         const filter = {_id: new ObjectId(id)}
