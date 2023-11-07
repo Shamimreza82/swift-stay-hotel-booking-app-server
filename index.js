@@ -11,7 +11,7 @@ const port =  process.env.PORT || 5000
 //middelwair
 app.use(express.json())
 app.use(cors({
-    origin: ['http://localhost:5173','http://localhost:5173' ],
+    origin: ['http://localhost:5173','http://localhost:5174' ],
     credentials: true
 }))
 app.use(cookieParser())
@@ -62,6 +62,7 @@ async function run() {
 
     const roomsCollections = client.db("roomsDB").collection("rooms")
     const bookingCollections = client.db("roomsDB").collection("booking")
+    const ratingCollections = client.db("roomsDB").collection("rating")
 
 
 
@@ -87,9 +88,23 @@ async function run() {
 
 
     /// rooms related route
+     //http://localhost:5000/api/v1/booking?sortField=price&sortOrder=asc
+     
     app.get('/api/v1/rooms', async(req, res) => {
-        const result = await roomsCollections.find().toArray()
+        try {
+            const sortField = req.query.sortField
+        const sortOrder = req.query.sortOrder
+
+        let sortObj ={}
+        if(sortField && sortOrder){
+            sortObj[sortField] = sortOrder
+        }
+        const cursor = roomsCollections.find().sort(sortObj)
+        const result = await cursor.toArray()
         res.send(result)
+        } catch (error) {
+            console.log(error);
+        }
     })
 
     app.get('/api/v1/room/:id', async(req, res) => {
@@ -100,9 +115,12 @@ async function run() {
         res.send(result)
     })
 
+   
+
     app.post('/api/v1/booking',async (req, res) => {
         const booking = req.body
         console.log(booking);
+
         const result = await bookingCollections.insertOne(booking)
         res.send(result)
     })
@@ -120,6 +138,82 @@ async function run() {
             const result = await bookingCollections.find(query).toArray()
             res.send(result)
     })
+
+    app.get('/booking', async(req, res) => {
+        const result = await bookingCollections.find().toArray()
+        res.send(result)
+    })
+
+    app.get('/booking/:id', async(req, res) => {
+        const id = req.params.id
+        console.log(id);
+        const query = {_id: new ObjectId(id)}
+        const result = await bookingCollections.findOne(query)
+        res.send(result)
+    })
+
+    app.put('/booking/:id', async(req, res) => {
+        try {
+          const date = req.body;
+        const id = req.params.id
+        console.log(id, date);
+        const filter = {_id: new ObjectId(id)}
+        const options = { upsert: true };
+        const updateDoc = {
+          $set: {
+            date: date
+          },
+        };
+        const result = await bookingCollections.updateOne(filter, updateDoc, options )
+        res.send(result)
+        } catch (error) {
+          console.log(error);
+        }
+ 
+    })
+
+
+
+    app.delete('/api/v1/deleteBooking/:id', async(req, res) => {
+        try {
+          const id = req.params.id
+        console.log(id);
+        const query = {_id: new ObjectId(id)}
+        const result = bookingCollections.deleteOne(query)
+        res.send(result)
+        } catch (error) {
+          console.log(error);
+        }
+    })
+
+    app.post('/rating', async (req, res) => {
+       const rating = req.body; 
+       console.log(rating);
+       const result = await ratingCollections.insertOne(rating)
+       res.send(result)
+    })
+
+    app.get('/ratings', async (req, res) => {
+      const result = await ratingCollections.find().toArray()
+      res.send(result)
+   })
+
+
+
+
+
+    // app.patch('/api/v1/booking/:id', async(req, res) => {
+    //   const id = req.params.id
+    //   const filter = {_id: new ObjectId(id)}
+    //   const updateBooking = req.body; 
+    //   console.log(updateBooking);
+
+    //   const updateDoc = {
+    //   $set: {
+    //     plot: `A harvest of random numbers, such as: ${Math.random()}`
+    //   },
+    // };
+    // })
 
 
 
