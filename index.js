@@ -11,7 +11,11 @@ const port =  process.env.PORT || 5000
 //middelwair
 app.use(express.json())
 app.use(cors({
-    origin: ['http://localhost:5173','http://localhost:5174' ],
+    origin: [
+      'http://localhost:5173','http://localhost:5174',
+      'https://swiftstay-931f1.web.app',
+      'https://swiftstay-931f1.firebaseapp.com'
+     ],
     credentials: true
 }))
 app.use(cookieParser())
@@ -23,7 +27,6 @@ const verifyToken = async (req, res, next) => {
     const token = req.cookies?.token; 
     console.log('value of token',token);
     if(!token){
-      console.log(err);
       return res.status(401).send({massage: "not authorize"})
     }
     jwt.verify(token, process.env.ACCESS_TOKEN, (err, decoded) => {
@@ -34,7 +37,6 @@ const verifyToken = async (req, res, next) => {
       req.user = decoded; 
       next()
     })
-   
   }
 
 
@@ -74,8 +76,9 @@ async function run() {
         const token = jwt.sign(user, process.env.ACCESS_TOKEN, {expiresIn: '1h'} )
         res
         .cookie('token', token, {
-          httpOnly: true, 
-          secure: false, 
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production" ? true: false,
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
         })
         .send({success: true})
     })
@@ -125,9 +128,9 @@ async function run() {
         res.send(result)
     })
 
-    app.get('/api/v1/bookings', verifyToken,  async (req, res) => {
-        console.log("ssssssssssss",req.query.email);
-        console.log(" veryfy Token", req.user.email);
+    app.get('/api/v1/bookings',verifyToken, async (req, res) => {
+        console.log(req.query.email);
+        console.log(req.user.email);
         if(req.query?.email !== req.user?.email){
             return res.status(401).send({message: "unauthorize"})
           }
