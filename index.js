@@ -12,7 +12,7 @@ const port =  process.env.PORT || 5000
 app.use(express.json())
 app.use(cors({
     origin: [
-      'http://localhost:5173','http://localhost:5174',
+      // 'http://localhost:5173','http://localhost:5174',
       'https://swiftstay-931f1.web.app',
       'https://swiftstay-931f1.firebaseapp.com'
      ],
@@ -120,7 +120,7 @@ async function run() {
 
    
 
-    app.post('/api/v1/booking',async (req, res) => {
+    app.post('/api/v1/booking',  async (req, res) => {
         const booking = req.body
         console.log(booking);
 
@@ -142,7 +142,7 @@ async function run() {
             res.send(result)
     })
 
-    app.get('/booking', async(req, res) => {
+    app.get('/booking', verifyToken, async(req, res) => {
         const result = await bookingCollections.find().toArray()
         res.send(result)
     })
